@@ -237,6 +237,29 @@
             padding: 1.5rem;
             margin-bottom: 1rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Horizontal layout for input/output fields */
+        .fields-container {
+            display: flex;
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .field-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .field-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
         }
 
         .panel textarea {
@@ -332,6 +355,15 @@
             .panel textarea {
                 min-height: 100px;
             }
+
+            /* Stack fields vertically on mobile */
+            .fields-container {
+                flex-direction: column;
+            }
+
+            .field-label {
+                font-size: 13px;
+            }
         }
     </style>
 </head>
@@ -355,13 +387,21 @@
             <div id="encode-section" class="content-section active">
                 <h2>Encode Coordinates to Polyline</h2>
                 <div class="panel">
-                    <textarea id="coordInput" placeholder="54.6800,25.2400
+                    <div class="fields-container">
+                        <div class="field-group">
+                            <div class="field-label">Input Coordinates</div>
+                            <textarea id="coordInput" placeholder="54.6800,25.2400
 54.6700,25.2600
 54.6600,25.2800
 54.6500,25.3000
 ..."></textarea>
+                        </div>
+                        <div class="field-group">
+                            <div class="field-label">Encoded Polyline</div>
+                            <textarea id="encodedOutput" readonly placeholder="Encoded polyline will appear here"></textarea>
+                        </div>
+                    </div>
                     <button id="encodeBtn">Encode ➔</button>
-                    <textarea id="encodedOutput" readonly placeholder="Encoded polyline will appear here"></textarea>
                 </div>
             </div>
 
@@ -369,10 +409,18 @@
             <div id="decode-section" class="content-section">
                 <h2>Decode Polyline to Coordinates</h2>
                 <div class="panel">
-                    <textarea id="polylineInput" placeholder="u{~vHswvpC…"></textarea>
+                    <div class="fields-container">
+                        <div class="field-group">
+                            <div class="field-label">Polyline String</div>
+                            <textarea id="polylineInput" placeholder="u{~vHswvpC…"></textarea>
+                        </div>
+                        <div class="field-group">
+                            <div class="field-label">Decoded Coordinates</div>
+                            <textarea id="decodedOutput" readonly placeholder="Lat,Lon pairs will appear here"></textarea>
+                            <button id="copyCoordinatesBtn" class="copy-btn" style="display: none;">📋 Copy Coordinates</button>
+                        </div>
+                    </div>
                     <button id="decodeBtn">Decode ➔</button>
-                    <textarea id="decodedOutput" readonly placeholder="Lat,Lon pairs will appear here"></textarea>
-                    <button id="copyCoordinatesBtn" class="copy-btn" style="display: none;">📋 Copy Coordinates</button>
                 </div>
             </div>
         </div>
