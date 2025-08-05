@@ -63,6 +63,22 @@
             resize: none;
             font-size: 14px;
         }
+        
+        /* Custom numbered marker styles */
+        .numbered-marker {
+            background-color: #007acc;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
         .button-container {
             margin-top: 10px;
             display: flex;
@@ -108,11 +124,40 @@
             height: 100%;
             width: 100%;
         }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .split-container {
+                flex-direction: column;
+            }
+            .left-pane {
+                width: 100%;
+                max-width: none;
+                height: 50vh;
+            }
+            .resizer {
+                display: none;
+            }
+            .right-pane {
+                height: 50vh;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+        
+        /* Retina display optimization */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .leaflet-marker-icon {
+                image-rendering: -webkit-optimize-contrast;
+                image-rendering: crisp-edges;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Interactive Map – Plot Coordinates</h1>
+        <h1>Interactive Map – Plotted Coordinates</h1>
     </div>
     
     <div class="split-container">
@@ -153,11 +198,22 @@
         // Array to store all markers
         let allMarkers = [];
 
+        // Function to create custom numbered marker icon
+        function createNumberedIcon(number) {
+            return L.divIcon({
+                className: 'numbered-marker',
+                html: number.toString(),
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+                popupAnchor: [0, -15]
+            });
+        }
+
         // Function to plot coordinates from textarea
         function plotCoordinates() {
             const input = document.getElementById('coordinateInput').value.trim();
             if (!input) {
-                alert('Please enter some coordinates first!');
+                alert('📍 Please enter some coordinates in the text area before plotting.');
                 return;
             }
 
@@ -166,6 +222,7 @@
 
             const lines = input.split('\n');
             const newMarkers = [];
+            let markerIndex = 1; // Start numbering from 1
 
             lines.forEach((line, index) => {
                 const trimmedLine = line.trim();
@@ -185,12 +242,16 @@
                     return;
                 }
 
-                const marker = L.marker([lat, lng])
+                // Create marker with custom numbered icon
+                const marker = L.marker([lat, lng], {
+                    icon: createNumberedIcon(markerIndex)
+                })
                     .addTo(map)
-                    .bindPopup(`Marker ${index + 1}<br>Lat: ${lat}<br>Lng: ${lng}`);
+                    .bindPopup(`<b>Location #${markerIndex}</b><br>Latitude: ${lat}°<br>Longitude: ${lng}°`);
                 
                 newMarkers.push(marker);
                 allMarkers.push(marker);
+                markerIndex++; // Increment for next valid marker
             });
 
             // Fit map to show all new markers
@@ -198,7 +259,7 @@
                 const group = new L.featureGroup(newMarkers);
                 map.fitBounds(group.getBounds().pad(0.1));
             } else {
-                alert('No valid coordinates found! Please check your input format.');
+                alert('⚠️ No valid coordinates found!\n\nPlease ensure coordinates are in the format:\nlatitude, longitude\n\nExample:\n54.6800, 25.2400');
             }
         }
 
