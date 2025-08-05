@@ -246,6 +246,24 @@
             cursor: not-allowed;
         }
 
+        /* Copy button specific styling */
+        .copy-btn {
+            background-color: #27ae60 !important;
+            margin-top: 0.5rem !important;
+        }
+
+        .copy-btn:hover {
+            background-color: #229954 !important;
+        }
+
+        .copy-btn:active {
+            background-color: #1e8449 !important;
+        }
+
+        .copy-btn.copied {
+            background-color: #2ecc71 !important;
+        }
+
         /* Responsive design */
         @media (max-width: 768px) {
             header h1 {
@@ -310,6 +328,7 @@
                 <textarea id="polylineInput" placeholder="u{~vHswvpC…"></textarea>
                 <button id="decodeBtn">Decode ➔</button>
                 <textarea id="decodedOutput" readonly placeholder="Lat,Lon pairs will appear here"></textarea>
+                <button id="copyCoordinatesBtn" class="copy-btn" style="display: none;">📋 Copy Coordinates</button>
             </div>
         </div>
 
@@ -488,6 +507,8 @@
 
             // Initialize decode button functionality
             const decodeBtn = document.getElementById('decodeBtn');
+            const copyCoordinatesBtn = document.getElementById('copyCoordinatesBtn');
+            
             decodeBtn.onclick = () => {
                 const polylineInput = document.getElementById('polylineInput');
                 const decodedOutput = document.getElementById('decodedOutput');
@@ -504,11 +525,60 @@
                     const coords = polyline.decode(str);
                     decodedOutput.value = coords.map(c => `${c[0].toFixed(6)}, ${c[1].toFixed(6)}`).join('\n');
                     drawPoints(coords);
+                    
+                    // Show copy button after successful decode
+                    copyCoordinatesBtn.style.display = 'inline-block';
                 } catch (e) {
                     alert('Invalid polyline');
+                    // Hide copy button on error
+                    copyCoordinatesBtn.style.display = 'none';
                 } finally {
                     enableButton(decodeBtn);
                 }
+            };
+            
+            // Initialize copy coordinates button functionality
+            copyCoordinatesBtn.onclick = () => {
+                const decodedOutput = document.getElementById('decodedOutput');
+                const coordinates = decodedOutput.value;
+                
+                if (!coordinates) {
+                    alert('No coordinates to copy');
+                    return;
+                }
+                
+                // Copy to clipboard
+                navigator.clipboard.writeText(coordinates).then(() => {
+                    // Show success feedback
+                    const originalText = copyCoordinatesBtn.innerHTML;
+                    copyCoordinatesBtn.innerHTML = '✅ Copied!';
+                    copyCoordinatesBtn.classList.add('copied');
+                    
+                    // Reset button after 2 seconds
+                    setTimeout(() => {
+                        copyCoordinatesBtn.innerHTML = originalText;
+                        copyCoordinatesBtn.classList.remove('copied');
+                    }, 2000);
+                }).catch(err => {
+                    // Fallback for older browsers
+                    try {
+                        decodedOutput.select();
+                        document.execCommand('copy');
+                        
+                        // Show success feedback
+                        const originalText = copyCoordinatesBtn.innerHTML;
+                        copyCoordinatesBtn.innerHTML = '✅ Copied!';
+                        copyCoordinatesBtn.classList.add('copied');
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(() => {
+                            copyCoordinatesBtn.innerHTML = originalText;
+                            copyCoordinatesBtn.classList.remove('copied');
+                        }, 2000);
+                    } catch (fallbackErr) {
+                        alert('Copy failed. Please manually select and copy the coordinates.');
+                    }
+                });
             };
         }
 
