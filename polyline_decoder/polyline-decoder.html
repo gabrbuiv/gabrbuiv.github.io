@@ -402,7 +402,9 @@
                             <textarea id="encodedOutput" readonly placeholder="Encoded polyline will appear here"></textarea>
                         </div>
                     </div>
-                    <button id="encodeBtn">Encode ➔</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                        <button id="encodeBtn" style="margin: 0;">Encode ➔</button>
+                    </div>
                 </div>
             </div>
 
@@ -419,7 +421,7 @@
                             <textarea id="decodedOutput" readonly placeholder="Lat,Lon pairs will appear here"></textarea>
                         </div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.1rem;">
                         <button id="decodeBtn" style="margin: 0;">Decode ➔</button>
                         <button id="copyCoordinatesBtn" class="copy-btn" style="margin: 0;">📋 Copy Coordinates</button>
                     </div>
@@ -431,7 +433,7 @@
         <div class="divider" id="divider"></div>
 
         <!-- Map Container -->
-        <div id="map-container" style="flex: 1.5; min-height: 200px; display: flex; flex-direction: column;">
+        <div id="map-container" style="flex: 1.75; min-height: 200px; display: flex; flex-direction: column;">
             <div id="map" style="flex: 1; margin-top: 0; min-height: 200px;">
                 <div class="map-controls">
                     <button id="layersBtn" class="map-toggle-btn" style="margin-right: 0.5rem;">🗺️ Layers</button>
