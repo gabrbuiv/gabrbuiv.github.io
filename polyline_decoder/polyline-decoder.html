@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polyline Encoder/Decoder</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* Overall layout */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+
+        /* Header */
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Tab bar */
+        .tab-bar {
+            display: flex;
+            background-color: #34495e;
+            border-bottom: 1px solid #2c3e50;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            color: #bdc3c7;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button:hover {
+            background-color: #3c4f64;
+            color: white;
+        }
+
+        .tab-button.active {
+            background-color: #3498db;
+            color: white;
+        }
+
+        /* Content sections */
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .content-section {
+            display: none;
+            flex: 1;
+            padding: 1rem;
+            background-color: white;
+            overflow-y: auto;
+        }
+
+        .content-section.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Map container */
+        #map {
+            width: 100%;
+            height: 400px;
+            min-height: 300px;
+            margin-top: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        /* Utility classes */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Custom numbered marker styles */
+        .numbered-marker {
+            background-color: #3498db;
+            border: 2px solid white;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            width: 24px;
+            height: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Numbered marker icon styles */
+        .numMarker {
+            background: #1976d2;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 12px;
+            line-height: 24px;
+            text-align: center;
+        }
+
+        .numbered-marker.start {
+            background-color: #27ae60;
+        }
+
+        .numbered-marker.end {
+            background-color: #e74c3c;
+        }
+
+        /* Panel styling */
+        .panel {
+            background-color: #ffffff;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        .panel textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .panel textarea::placeholder {
+            color: #999;
+        }
+
+        .panel button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin: 1rem 0;
+            transition: background-color 0.3s ease;
+        }
+
+        .panel button:hover {
+            background-color: #2980b9;
+        }
+
+        .panel button:active {
+            background-color: #21618c;
+        }
+
+        .panel button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.25rem;
+            }
+            
+            .tab-button {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .content-section {
+                padding: 0.75rem;
+            }
+            
+            #map {
+                height: 300px;
+            }
+
+            .panel {
+                padding: 1rem;
+            }
+
+            .panel textarea {
+                min-height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <h1>Polyline Encoder/Decoder</h1>
+    </header>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+        <button class="tab-button active" data-tab="encode">Encode</button>
+        <button class="tab-button" data-tab="decode">Decode</button>
+    </div>
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+        <!-- Encode Section -->
+        <div id="encode-section" class="content-section active">
+            <h2>Encode Coordinates to Polyline</h2>
+            <div class="panel">
+                <textarea id="coordInput" placeholder="54.6800,25.2400
+54.6700,25.2600
+54.6600,25.2800
+54.6500,25.3000
+..."></textarea>
+                <button id="encodeBtn">Encode ➔</button>
+                <textarea id="encodedOutput" readonly placeholder="Encoded polyline will appear here"></textarea>
+            </div>
+        </div>
+
+        <!-- Decode Section -->
+        <div id="decode-section" class="content-section">
+            <h2>Decode Polyline to Coordinates</h2>
+            <div class="panel">
+                <textarea id="polylineInput" placeholder="u{~vHswvpC…"></textarea>
+                <button id="decodeBtn">Decode ➔</button>
+                <textarea id="decodedOutput" readonly placeholder="Lat,Lon pairs will appear here"></textarea>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div id="map"></div>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/@mapbox/polyline@1.1.1/src/polyline.js"></script>
+
+    <script>
+        // Global variables
+        let map;
+        let markersLayer;
+        let polyLayer;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTabs();
+            initializeMap();
+            initializeButtons();
+            initializeCopyOnFocus();
+        });
+
+        // Tab switching functionality
+        function initializeTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            // Add event listeners to tab buttons
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    switchTab(targetTab);
+                });
+            });
+        }
+
+        function switchTab(targetTab) {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            // Remove active class from all tabs and sections
+            tabButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            contentSections.forEach(section => {
+                section.classList.remove('active');
+                section.setAttribute('hidden', 'true');
+            });
+
+            // Add active class to clicked tab
+            const activeButton = document.querySelector(`[data-tab="${targetTab}"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+
+            // Show the corresponding content section
+            const activeSection = document.getElementById(`${targetTab}-section`);
+            if (activeSection) {
+                activeSection.classList.add('active');
+                activeSection.removeAttribute('hidden');
+            }
+
+            // Re-render the map when tab is switched
+            if (map) {
+                // Small timeout to ensure the DOM has updated
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 100);
+            }
+        }
+
+        // Initialize Leaflet map
+        function initializeMap() {
+            // Default center 0,0 zoom 2
+            map = L.map('map').setView([0, 0], 2);
+
+            // Add OSM tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Create L.LayerGroup markersLayer and add to map
+            markersLayer = L.layerGroup().addTo(map);
+
+            // Create L.Polyline polyLayer (initially empty)
+            polyLayer = L.polyline([], { color: 'blue' });
+        }
+
+        // Helper resetMap function
+        function resetMap() {
+            markersLayer.clearLayers();
+            if (polyLayer) {
+                map.removeLayer(polyLayer);
+            }
+        }
+
+        // Numbered marker helper function
+        function numberedIcon(i) {
+            return L.divIcon({
+                html: `<div class="num">${i}</div>`,
+                className: 'numMarker',
+                iconSize: [24, 24]
+            });
+        }
+
+        // Initialize both encode and decode buttons
+        function initializeButtons() {
+            // Initialize encode button functionality
+            const encodeBtn = document.getElementById('encodeBtn');
+            encodeBtn.onclick = () => {
+                disableButton(encodeBtn);
+                
+                try {
+                    // Grab coordInput value, split by lines, parse each as lat,lng floats
+                    const coordInput = document.getElementById('coordInput');
+                    const lines = coordInput.value.split('\n');
+                    
+                    const coords = [];
+                    
+                    for (let line of lines) {
+                        line = line.trim();
+                        // Filter empties
+                        if (line === '') continue;
+                        
+                        const parts = line.split(',');
+                        if (parts.length !== 2) {
+                            alert('Invalid input format. Each line must contain exactly one comma-separated lat,lng pair.');
+                            enableButton(encodeBtn);
+                            return;
+                        }
+                        
+                        const lat = parseFloat(parts[0].trim());
+                        const lng = parseFloat(parts[1].trim());
+                        
+                        // Validate !isNaN
+                        if (isNaN(lat) || isNaN(lng)) {
+                            alert('Invalid coordinate values. Please ensure all values are valid numbers.');
+                            enableButton(encodeBtn);
+                            return;
+                        }
+                        
+                        coords.push([lat, lng]);
+                    }
+                    
+                    // If error (no valid coordinates), alert and return
+                    if (coords.length === 0) {
+                        alert('No valid coordinates found. Please enter at least one valid lat,lng pair.');
+                        enableButton(encodeBtn);
+                        return;
+                    }
+                    
+                    // Encode coordinates using polyline library
+                    const encoded = polyline.encode(coords);
+                    
+                    // Set encoded output
+                    const encodedOutput = document.getElementById('encodedOutput');
+                    encodedOutput.value = encoded;
+                    
+                    // Draw points on map
+                    drawPoints(coords);
+                } catch (error) {
+                    alert('An error occurred during encoding: ' + error.message);
+                } finally {
+                    enableButton(encodeBtn);
+                }
+            };
+
+            // Initialize decode button functionality
+            const decodeBtn = document.getElementById('decodeBtn');
+            decodeBtn.onclick = () => {
+                const polylineInput = document.getElementById('polylineInput');
+                const decodedOutput = document.getElementById('decodedOutput');
+
+                const str = trimInput(polylineInput.value);
+                if (!str) {
+                    alert('Please enter polyline');
+                    return;
+                }
+
+                disableButton(decodeBtn);
+
+                try {
+                    const coords = polyline.decode(str);
+                    decodedOutput.value = coords.map(c => `${c[0].toFixed(6)}, ${c[1].toFixed(6)}`).join('\n');
+                    drawPoints(coords);
+                } catch (e) {
+                    alert('Invalid polyline');
+                } finally {
+                    enableButton(decodeBtn);
+                }
+            };
+        }
+
+        // Helper functions
+        function trimInput(value) {
+            return value.trim();
+        }
+
+        function disableButton(button) {
+            button.disabled = true;
+        }
+
+        function enableButton(button) {
+            button.disabled = false;
+        }
+
+        function addCopyOnFocus(textAreaId) {
+            const textarea = document.getElementById(textAreaId);
+            if (textarea) {
+                textarea.addEventListener('focus', function() {
+                    this.select();
+                });
+            }
+        }
+
+        function initializeCopyOnFocus() {
+            // Initialize copy-on-focus for textareas
+            addCopyOnFocus('coordInput');
+            addCopyOnFocus('polylineInput');
+            addCopyOnFocus('encodedOutput');
+            addCopyOnFocus('decodedOutput');
+        }
+        function drawPoints(coords) {
+            resetMap();
+            coords.forEach((latlng, idx) => {
+                L.marker(latlng, {icon: numberedIcon(idx + 1)})
+                    .bindPopup(`${latlng[0].toFixed(6)}, ${latlng[1].toFixed(6)}`)
+                    .addTo(markersLayer);
+            });
+            polyLayer = L.polyline(coords, {color: '#ff5722', weight: 2}).addTo(map);
+            map.fitBounds(polyLayer.getBounds(), {padding: [20, 20]});
+        }
+    </script>
+
+</body>
+</html>
