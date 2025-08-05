@@ -417,7 +417,7 @@
                         <div class="field-group">
                             <div class="field-label">Decoded Coordinates</div>
                             <textarea id="decodedOutput" readonly placeholder="Lat,Lon pairs will appear here"></textarea>
-                            <button id="copyCoordinatesBtn" class="copy-btn" style="display: none;">📋 Copy Coordinates</button>
+                            <button id="copyCoordinatesBtn" class="copy-btn">📋 Copy Coordinates</button>
                         </div>
                     </div>
                     <button id="decodeBtn">Decode ➔</button>
@@ -660,13 +660,8 @@
                     const coords = polyline.decode(str);
                     decodedOutput.value = coords.map(c => `${c[0].toFixed(6)}, ${c[1].toFixed(6)}`).join('\n');
                     drawPoints(coords);
-                    
-                    // Show copy button after successful decode
-                    copyCoordinatesBtn.style.display = 'inline-block';
                 } catch (e) {
                     alert('Invalid polyline');
-                    // Hide copy button on error
-                    copyCoordinatesBtn.style.display = 'none';
                 } finally {
                     enableButton(decodeBtn);
                 }
@@ -814,10 +809,6 @@
                 document.getElementById('encodedOutput').value = '';
                 document.getElementById('polylineInput').value = '';
                 document.getElementById('decodedOutput').value = '';
-                
-                // Hide the copy coordinates button
-                const copyCoordinatesBtn = document.getElementById('copyCoordinatesBtn');
-                copyCoordinatesBtn.style.display = 'none';
                 
                 // Clear current markers array
                 currentMarkers = [];
