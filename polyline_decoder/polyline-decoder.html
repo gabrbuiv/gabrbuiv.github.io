@@ -92,6 +92,52 @@
             margin-top: 1rem;
             border: 1px solid #ddd;
             border-radius: 4px;
+            position: relative;
+            transition: height 0.3s ease;
+        }
+
+        /* Map controls */
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .map-toggle-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        .map-toggle-btn:hover {
+            background: #2980b9;
+        }
+
+        /* Maximized map styles */
+        .map-maximized {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        .map-maximized .map-controls {
+            top: 20px;
+            right: 20px;
         }
 
         /* Utility classes */
@@ -260,7 +306,11 @@
         </div>
 
         <!-- Map Container -->
-        <div id="map"></div>
+        <div id="map">
+            <div class="map-controls">
+                <button id="mapToggleBtn" class="map-toggle-btn">⛶ Maximize</button>
+            </div>
+        </div>
     </div>
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -278,6 +328,7 @@
             initializeMap();
             initializeButtons();
             initializeCopyOnFocus();
+            initializeMapToggle();
         });
 
         // Tab switching functionality
@@ -490,6 +541,41 @@
             });
             polyLayer = L.polyline(coords, {color: '#ff5722', weight: 2}).addTo(map);
             map.fitBounds(polyLayer.getBounds(), {padding: [20, 20]});
+        }
+
+        // Initialize map toggle functionality
+        function initializeMapToggle() {
+            const mapToggleBtn = document.getElementById('mapToggleBtn');
+            const mapContainer = document.getElementById('map');
+            let isMaximized = false;
+
+            mapToggleBtn.addEventListener('click', function() {
+                if (isMaximized) {
+                    // Minimize the map
+                    mapContainer.classList.remove('map-maximized');
+                    mapToggleBtn.innerHTML = '⛶ Maximize';
+                    isMaximized = false;
+                } else {
+                    // Maximize the map
+                    mapContainer.classList.add('map-maximized');
+                    mapToggleBtn.innerHTML = '⤢ Minimize';
+                    isMaximized = true;
+                }
+
+                // Invalidate map size after transition
+                setTimeout(() => {
+                    if (map) {
+                        map.invalidateSize();
+                    }
+                }, 350); // Wait for CSS transition to complete
+            });
+
+            // Handle escape key to minimize map
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isMaximized) {
+                    mapToggleBtn.click();
+                }
+            });
         }
     </script>
 
