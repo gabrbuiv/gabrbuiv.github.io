@@ -69,6 +69,15 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative;
+        }
+
+        .content-area {
+            flex: 1;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .content-section {
@@ -82,6 +91,39 @@
         .content-section.active {
             display: flex;
             flex-direction: column;
+        }
+
+        /* Resizable divider */
+        .divider {
+            height: 8px;
+            background: linear-gradient(to bottom, #ecf0f1, #bdc3c7, #ecf0f1);
+            cursor: row-resize;
+            position: relative;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+
+        .divider:hover {
+            background: linear-gradient(to bottom, #d5dbdb, #95a5a6, #d5dbdb);
+        }
+
+        .divider::before {
+            content: '⋯';
+            color: #7f8c8d;
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .divider.dragging {
+            background: linear-gradient(to bottom, #3498db, #2980b9, #3498db);
+        }
+
+        .divider.dragging::before {
+            color: white;
         }
 
         /* Map container */
@@ -307,35 +349,43 @@
 
     <!-- Content Wrapper -->
     <div class="content-wrapper">
-        <!-- Encode Section -->
-        <div id="encode-section" class="content-section active">
-            <h2>Encode Coordinates to Polyline</h2>
-            <div class="panel">
-                <textarea id="coordInput" placeholder="54.6800,25.2400
+        <!-- Content Area (Input/Output sections) -->
+        <div class="content-area">
+            <!-- Encode Section -->
+            <div id="encode-section" class="content-section active">
+                <h2>Encode Coordinates to Polyline</h2>
+                <div class="panel">
+                    <textarea id="coordInput" placeholder="54.6800,25.2400
 54.6700,25.2600
 54.6600,25.2800
 54.6500,25.3000
 ..."></textarea>
-                <button id="encodeBtn">Encode ➔</button>
-                <textarea id="encodedOutput" readonly placeholder="Encoded polyline will appear here"></textarea>
+                    <button id="encodeBtn">Encode ➔</button>
+                    <textarea id="encodedOutput" readonly placeholder="Encoded polyline will appear here"></textarea>
+                </div>
+            </div>
+
+            <!-- Decode Section -->
+            <div id="decode-section" class="content-section">
+                <h2>Decode Polyline to Coordinates</h2>
+                <div class="panel">
+                    <textarea id="polylineInput" placeholder="u{~vHswvpC…"></textarea>
+                    <button id="decodeBtn">Decode ➔</button>
+                    <textarea id="decodedOutput" readonly placeholder="Lat,Lon pairs will appear here"></textarea>
+                    <button id="copyCoordinatesBtn" class="copy-btn" style="display: none;">📋 Copy Coordinates</button>
+                </div>
             </div>
         </div>
 
-        <!-- Decode Section -->
-        <div id="decode-section" class="content-section">
-            <h2>Decode Polyline to Coordinates</h2>
-            <div class="panel">
-                <textarea id="polylineInput" placeholder="u{~vHswvpC…"></textarea>
-                <button id="decodeBtn">Decode ➔</button>
-                <textarea id="decodedOutput" readonly placeholder="Lat,Lon pairs will appear here"></textarea>
-                <button id="copyCoordinatesBtn" class="copy-btn" style="display: none;">📋 Copy Coordinates</button>
-            </div>
-        </div>
+        <!-- Resizable Divider -->
+        <div class="divider" id="divider"></div>
 
         <!-- Map Container -->
-        <div id="map">
-            <div class="map-controls">
-                <button id="mapToggleBtn" class="map-toggle-btn">⛶ Maximize</button>
+        <div id="map-container" style="flex: 1; min-height: 200px; display: flex; flex-direction: column;">
+            <div id="map" style="flex: 1; margin-top: 0; min-height: 200px;">
+                <div class="map-controls">
+                    <button id="mapToggleBtn" class="map-toggle-btn">⛶ Maximize</button>
+                </div>
             </div>
         </div>
     </div>
@@ -357,6 +407,7 @@
             initializeButtons();
             initializeCopyOnFocus();
             initializeMapToggle();
+            initializeDividerResize();
         });
 
         // Tab switching functionality
@@ -740,6 +791,170 @@
                     }
                 }
             }
+        }
+
+        // Initialize divider resize functionality
+        function initializeDividerResize() {
+            const divider = document.getElementById('divider');
+            const contentArea = document.querySelector('.content-area');
+            const mapContainer = document.getElementById('map-container');
+            const contentWrapper = document.querySelector('.content-wrapper');
+            
+            let isDragging = false;
+            let startY = 0;
+            let startContentHeight = 0;
+            let startMapHeight = 0;
+
+            divider.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                startY = e.clientY;
+                
+                // Get current heights
+                startContentHeight = contentArea.offsetHeight;
+                startMapHeight = mapContainer.offsetHeight;
+                
+                // Add dragging class for visual feedback
+                divider.classList.add('dragging');
+                
+                // Prevent text selection during drag
+                document.body.style.userSelect = 'none';
+                document.body.style.cursor = 'row-resize';
+                
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                
+                const deltaY = e.clientY - startY;
+                const wrapperHeight = contentWrapper.offsetHeight;
+                const dividerHeight = divider.offsetHeight;
+                
+                // Calculate new heights
+                let newContentHeight = startContentHeight + deltaY;
+                let newMapHeight = startMapHeight - deltaY;
+                
+                // Enforce minimum heights
+                const minHeight = 200;
+                newContentHeight = Math.max(minHeight, newContentHeight);
+                newMapHeight = Math.max(minHeight, newMapHeight);
+                
+                // Ensure the total doesn't exceed available space
+                const totalAvailable = wrapperHeight - dividerHeight;
+                if (newContentHeight + newMapHeight > totalAvailable) {
+                    if (deltaY > 0) {
+                        // Growing content area, shrink map
+                        newContentHeight = totalAvailable - minHeight;
+                        newMapHeight = minHeight;
+                    } else {
+                        // Growing map area, shrink content
+                        newMapHeight = totalAvailable - minHeight;
+                        newContentHeight = minHeight;
+                    }
+                }
+                
+                // Apply the new heights using flex-basis
+                contentArea.style.flexBasis = newContentHeight + 'px';
+                contentArea.style.flexGrow = '0';
+                contentArea.style.flexShrink = '0';
+                
+                mapContainer.style.flexBasis = newMapHeight + 'px';
+                mapContainer.style.flexGrow = '0';
+                mapContainer.style.flexShrink = '0';
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    
+                    // Remove dragging class
+                    divider.classList.remove('dragging');
+                    
+                    // Restore normal cursor and text selection
+                    document.body.style.userSelect = '';
+                    document.body.style.cursor = '';
+                    
+                    // Invalidate map size after resize
+                    setTimeout(() => {
+                        if (map) {
+                            map.invalidateSize();
+                        }
+                    }, 100);
+                }
+            });
+
+            // Handle touch events for mobile
+            divider.addEventListener('touchstart', function(e) {
+                const touch = e.touches[0];
+                isDragging = true;
+                startY = touch.clientY;
+                
+                // Get current heights
+                startContentHeight = contentArea.offsetHeight;
+                startMapHeight = mapContainer.offsetHeight;
+                
+                // Add dragging class for visual feedback
+                divider.classList.add('dragging');
+                
+                e.preventDefault();
+            });
+
+            document.addEventListener('touchmove', function(e) {
+                if (!isDragging) return;
+                
+                const touch = e.touches[0];
+                const deltaY = touch.clientY - startY;
+                const wrapperHeight = contentWrapper.offsetHeight;
+                const dividerHeight = divider.offsetHeight;
+                
+                // Calculate new heights
+                let newContentHeight = startContentHeight + deltaY;
+                let newMapHeight = startMapHeight - deltaY;
+                
+                // Enforce minimum heights
+                const minHeight = 200;
+                newContentHeight = Math.max(minHeight, newContentHeight);
+                newMapHeight = Math.max(minHeight, newMapHeight);
+                
+                // Ensure the total doesn't exceed available space
+                const totalAvailable = wrapperHeight - dividerHeight;
+                if (newContentHeight + newMapHeight > totalAvailable) {
+                    if (deltaY > 0) {
+                        newContentHeight = totalAvailable - minHeight;
+                        newMapHeight = minHeight;
+                    } else {
+                        newMapHeight = totalAvailable - minHeight;
+                        newContentHeight = minHeight;
+                    }
+                }
+                
+                // Apply the new heights using flex-basis
+                contentArea.style.flexBasis = newContentHeight + 'px';
+                contentArea.style.flexGrow = '0';
+                contentArea.style.flexShrink = '0';
+                
+                mapContainer.style.flexBasis = newMapHeight + 'px';
+                mapContainer.style.flexGrow = '0';
+                mapContainer.style.flexShrink = '0';
+                
+                e.preventDefault();
+            });
+
+            document.addEventListener('touchend', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    
+                    // Remove dragging class
+                    divider.classList.remove('dragging');
+                    
+                    // Invalidate map size after resize
+                    setTimeout(() => {
+                        if (map) {
+                            map.invalidateSize();
+                        }
+                    }, 100);
+                }
+            });
         }
     </script>
 
