@@ -432,6 +432,7 @@
         <div id="map-container" style="flex: 1.5; min-height: 200px; display: flex; flex-direction: column;">
             <div id="map" style="flex: 1; margin-top: 0; min-height: 200px;">
                 <div class="map-controls">
+                    <button id="layersBtn" class="map-toggle-btn" style="margin-right: 0.5rem;">🗺️ Layers</button>
                     <button id="clearMapBtn" class="map-toggle-btn" style="margin-right: 0.5rem;">🗑️ Clear</button>
                     <button id="mapToggleBtn" class="map-toggle-btn">⛶ Maximize</button>
                 </div>
@@ -448,6 +449,8 @@
         let markersLayer;
         let polyLayer;
         let currentMarkers = []; // Store marker references for highlighting
+        let currentLayerIndex = 0; // Track current layer
+        let baseLayers = []; // Store available layers
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -457,6 +460,7 @@
             initializeCopyOnFocus();
             initializeMapToggle();
             initializeClearMap();
+            initializeLayersToggle();
             initializeDividerResize();
         });
 
@@ -515,10 +519,40 @@
             // Default center 0,0 zoom 2
             map = L.map('map').setView([0, 0], 2);
 
-            // Add OSM tile layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+            // Define available base layers
+            baseLayers = [
+                {
+                    name: 'OpenStreetMap',
+                    layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors',
+                        maxZoom: 19
+                    })
+                },
+                {
+                    name: 'Satellite',
+                    layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                        attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+                        maxZoom: 19
+                    })
+                },
+                {
+                    name: 'Terrain',
+                    layer: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                        attribution: 'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
+                        maxZoom: 17
+                    })
+                },
+                {
+                    name: 'CartoDB Light',
+                    layer: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '© OpenStreetMap contributors © CARTO',
+                        maxZoom: 20
+                    })
+                }
+            ];
+
+            // Add the default layer (OpenStreetMap)
+            baseLayers[0].layer.addTo(map);
 
             // Create L.LayerGroup markersLayer and add to map
             markersLayer = L.layerGroup().addTo(map);
@@ -1031,6 +1065,39 @@
                     }, 100);
                 }
             });
+        }
+
+        // Initialize layers toggle functionality
+        function initializeLayersToggle() {
+            const layersBtn = document.getElementById('layersBtn');
+            
+            layersBtn.addEventListener('click', function() {
+                // Remove the current base layer
+                const currentLayer = baseLayers[currentLayerIndex];
+                map.removeLayer(currentLayer.layer);
+                
+                // Cycle to the next layer
+                currentLayerIndex = (currentLayerIndex + 1) % baseLayers.length;
+                
+                // Add new base layer to map
+                const newLayer = baseLayers[currentLayerIndex];
+                newLayer.layer.addTo(map);
+                
+                // Update button text to show current and next layer
+                const nextLayerIndex = (currentLayerIndex + 1) % baseLayers.length;
+                const nextLayerName = baseLayers[nextLayerIndex].name;
+                
+                // Show current layer name briefly, then next layer name
+                layersBtn.innerHTML = `🗺️ ${newLayer.name}`;
+                
+                setTimeout(() => {
+                    layersBtn.innerHTML = `🗺️ ${nextLayerName}`;
+                }, 1500);
+            });
+            
+            // Initialize button with next layer name
+            const nextLayerIndex = (currentLayerIndex + 1) % baseLayers.length;
+            layersBtn.innerHTML = `🗺️ ${baseLayers[nextLayerIndex].name}`;
         }
     </script>
 
