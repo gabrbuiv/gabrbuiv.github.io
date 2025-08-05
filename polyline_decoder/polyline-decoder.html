@@ -434,6 +434,7 @@
         <div id="map-container" style="flex: 1; min-height: 200px; display: flex; flex-direction: column;">
             <div id="map" style="flex: 1; margin-top: 0; min-height: 200px;">
                 <div class="map-controls">
+                    <button id="clearMapBtn" class="map-toggle-btn" style="margin-right: 0.5rem;">🗑️ Clear</button>
                     <button id="mapToggleBtn" class="map-toggle-btn">⛶ Maximize</button>
                 </div>
             </div>
@@ -457,6 +458,7 @@
             initializeButtons();
             initializeCopyOnFocus();
             initializeMapToggle();
+            initializeClearMap();
             initializeDividerResize();
         });
 
@@ -764,6 +766,32 @@
                 if (e.key === 'Escape' && isMaximized) {
                     mapToggleBtn.click();
                 }
+            });
+        }
+
+        // Initialize clear map functionality
+        function initializeClearMap() {
+            const clearMapBtn = document.getElementById('clearMapBtn');
+            
+            clearMapBtn.addEventListener('click', function() {
+                // Clear the map
+                resetMap();
+                
+                // Clear all input and output fields
+                document.getElementById('coordInput').value = '';
+                document.getElementById('encodedOutput').value = '';
+                document.getElementById('polylineInput').value = '';
+                document.getElementById('decodedOutput').value = '';
+                
+                // Hide the copy coordinates button
+                const copyCoordinatesBtn = document.getElementById('copyCoordinatesBtn');
+                copyCoordinatesBtn.style.display = 'none';
+                
+                // Clear current markers array
+                currentMarkers = [];
+                
+                // Reset map view to default
+                map.setView([0, 0], 2);
             });
         }
 
