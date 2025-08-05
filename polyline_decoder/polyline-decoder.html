@@ -169,6 +169,14 @@
             font-size: 12px;
             line-height: 24px;
             text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        /* Highlighted marker styles */
+        .numMarker.highlighted {
+            background: #ff5722 !important;
+            transform: scale(1.3);
+            box-shadow: 0 0 10px rgba(255, 87, 34, 0.6);
         }
 
         .numbered-marker.start {
@@ -321,6 +329,7 @@
         let map;
         let markersLayer;
         let polyLayer;
+        let currentMarkers = []; // Store marker references for highlighting
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -534,13 +543,22 @@
         }
         function drawPoints(coords) {
             resetMap();
+            currentMarkers = []; // Clear previous markers
+            
             coords.forEach((latlng, idx) => {
-                L.marker(latlng, {icon: numberedIcon(idx + 1)})
-                    .bindPopup(`${latlng[0].toFixed(6)}, ${latlng[1].toFixed(6)}`)
+                const marker = L.marker(latlng, {icon: numberedIcon(idx + 1)})
+                    .bindPopup(`Point ${idx + 1}: ${latlng[0].toFixed(6)}, ${latlng[1].toFixed(6)}`)
                     .addTo(markersLayer);
+                
+                // Store marker reference for highlighting
+                currentMarkers.push(marker);
             });
+            
             polyLayer = L.polyline(coords, {color: '#ff5722', weight: 2}).addTo(map);
             map.fitBounds(polyLayer.getBounds(), {padding: [20, 20]});
+            
+            // Initialize clickable coordinates for decoded output
+            initializeClickableCoordinates(coords);
         }
 
         // Initialize map toggle functionality
@@ -576,6 +594,82 @@
                     mapToggleBtn.click();
                 }
             });
+        }
+
+        // Initialize clickable coordinates functionality
+        function initializeClickableCoordinates(coords) {
+            const decodedOutput = document.getElementById('decodedOutput');
+            
+            // Remove any existing click listeners
+            decodedOutput.removeEventListener('click', handleCoordinateClick);
+            
+            // Add click listener to the decoded output textarea
+            decodedOutput.addEventListener('click', function(e) {
+                handleCoordinateClick(e, coords);
+            });
+        }
+
+        // Handle clicks on coordinate lines in the textarea
+        function handleCoordinateClick(e, coords) {
+            const textarea = e.target;
+            const cursorPosition = textarea.selectionStart;
+            const text = textarea.value;
+            
+            // Find which line the cursor is on
+            const lines = text.substring(0, cursorPosition).split('\n');
+            const lineIndex = lines.length - 1;
+            
+            // Highlight the corresponding marker on the map
+            if (lineIndex >= 0 && lineIndex < currentMarkers.length) {
+                highlightMarker(lineIndex);
+                
+                // Center map on the selected coordinate with animation
+                const coord = coords[lineIndex];
+                if (coord) {
+                    // Use flyTo for smooth animated centering
+                    map.flyTo(coord, Math.max(map.getZoom(), 12), {
+                        duration: 1.0, // 1 second animation
+                        animate: true
+                    });
+                    
+                    // Open popup for the selected marker after a short delay
+                    setTimeout(() => {
+                        if (currentMarkers[lineIndex]) {
+                            currentMarkers[lineIndex].openPopup();
+                        }
+                    }, 500); // Wait for animation to start
+                }
+            }
+        }
+
+        // Highlight a specific marker on the map
+        function highlightMarker(markerIndex) {
+            // Clear any existing highlights
+            currentMarkers.forEach(marker => {
+                const icon = marker.getElement();
+                if (icon) {
+                    const markerDiv = icon.querySelector('.num');
+                    if (markerDiv) {
+                        markerDiv.parentElement.classList.remove('highlighted');
+                    }
+                }
+            });
+            
+            // Highlight the selected marker
+            if (currentMarkers[markerIndex]) {
+                const icon = currentMarkers[markerIndex].getElement();
+                if (icon) {
+                    const markerDiv = icon.querySelector('.num');
+                    if (markerDiv) {
+                        markerDiv.parentElement.classList.add('highlighted');
+                        
+                        // Remove highlight after 3 seconds
+                        setTimeout(() => {
+                            markerDiv.parentElement.classList.remove('highlighted');
+                        }, 3000);
+                    }
+                }
+            }
         }
     </script>
 
