@@ -153,6 +153,56 @@
                 image-rendering: crisp-edges;
             }
         }
+        
+        /* Context menu styles */
+        .coordinate-popup {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            font-family: monospace;
+            font-size: 13px;
+            min-width: 200px;
+        }
+        
+        .coordinate-popup .coords {
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        
+        .coordinate-popup .actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .coordinate-popup .btn-small {
+            padding: 4px 8px;
+            font-size: 11px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .coordinate-popup .btn-copy {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .coordinate-popup .btn-copy:hover {
+            background-color: #218838;
+        }
+        
+        .coordinate-popup .btn-add {
+            background-color: #007acc;
+            color: white;
+        }
+        
+        .coordinate-popup .btn-add:hover {
+            background-color: #005fa3;
+        }
     </style>
 </head>
 <body>
@@ -270,6 +320,76 @@
             });
             allMarkers = [];
         }
+
+        // Right-click coordinate functionality
+        let coordinatePopup = null;
+
+        // Function to copy text to clipboard
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                return true;
+            }
+        }
+
+        // Function to add coordinates to textarea
+        function addCoordinateToInput(lat, lng) {
+            const coordInput = document.getElementById('coordinateInput');
+            const coordText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            
+            if (coordInput.value.trim()) {
+                coordInput.value += '\n' + coordText;
+            } else {
+                coordInput.value = coordText;
+            }
+            
+            // Close popup
+            if (coordinatePopup) {
+                map.closePopup(coordinatePopup);
+                coordinatePopup = null;
+            }
+        }
+
+        // Add right-click event listener to map
+        map.on('contextmenu', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            
+            const popupContent = `
+                <div class="coordinate-popup">
+                    <div><strong>📍 Coordinates:</strong></div>
+                    <div class="coords">Lat: ${lat.toFixed(6)}°</div>
+                    <div class="coords">Lng: ${lng.toFixed(6)}°</div>
+                    <div class="actions">
+                        <button class="btn-small btn-copy" onclick="copyToClipboard('${lat.toFixed(4)}, ${lng.toFixed(4)}').then(() => alert('📋 Coordinates copied to clipboard!'))">Copy</button>
+                        <button class="btn-small btn-add" onclick="addCoordinateToInput(${lat}, ${lng})">Add to Input</button>
+                    </div>
+                </div>
+            `;
+            
+            coordinatePopup = L.popup({
+                closeButton: true,
+                autoClose: true,
+                closeOnEscapeKey: true
+            })
+            .setLatLng(e.latlng)
+            .setContent(popupContent)
+            .openOn(map);
+        });
+
+        // Disable default browser context menu on map
+        document.getElementById('map').addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
 
         // Resizer functionality
         let isResizing = false;
