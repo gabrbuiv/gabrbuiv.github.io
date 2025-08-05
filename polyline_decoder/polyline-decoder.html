@@ -417,10 +417,12 @@
                         <div class="field-group">
                             <div class="field-label">Decoded Coordinates</div>
                             <textarea id="decodedOutput" readonly placeholder="Lat,Lon pairs will appear here"></textarea>
-                            <button id="copyCoordinatesBtn" class="copy-btn">📋 Copy Coordinates</button>
                         </div>
                     </div>
-                    <button id="decodeBtn">Decode ➔</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                        <button id="decodeBtn" style="margin: 0;">Decode ➔</button>
+                        <button id="copyCoordinatesBtn" class="copy-btn" style="margin: 0;">📋 Copy Coordinates</button>
+                    </div>
                 </div>
             </div>
         </div>
