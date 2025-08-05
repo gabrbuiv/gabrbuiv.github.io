@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Map – Plot Coordinates</title>
+    <title>Interactive Map – Plotted Coordinates</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body {
@@ -54,8 +54,7 @@
             color: #333;
         }
         #coordinateInput {
-            flex: 1;
-            min-height: 200px;
+            height: 380px;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -203,6 +202,50 @@
         .coordinate-popup .btn-add:hover {
             background-color: #005fa3;
         }
+        
+        /* Documentation section styles */
+        .documentation {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px;
+            border-left: 4px solid #007acc;
+        }
+        
+        .documentation h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .documentation .hint {
+            background-color: #e7f3ff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            border: 1px solid #b3d9ff;
+        }
+        
+        .documentation .usage-list {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .documentation .usage-list li {
+            margin-bottom: 6px;
+        }
+        
+        .documentation code {
+            background-color: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #495057;
+        }
     </style>
 </head>
 <body>
@@ -224,6 +267,19 @@
                     <button onclick="plotCoordinates()" class="btn btn-primary">Plot Coordinates</button>
                     <button onclick="clearMarkers()" class="btn btn-danger">Clear Markers</button>
                 </div>
+            </div>
+            
+            <div class="documentation">
+                <h3>How to Use</h3>
+                <div class="hint">
+                    <strong>💡 Tip:</strong> Right-click on the map if you want to get new coordinates.
+                </div>
+                <ul class="usage-list">
+                    <li>📝 Paste coordinates in the format: <code>lat, lng</code></li>
+                    <li>🖱️ Right-click on map to get coordinates</li>
+                    <li>🔢 Markers are automatically numbered starting from 1</li>
+                    <li>🗑️ Use "Clear Markers" to reset and start over</li>
+                </ul>
             </div>
         </div>
         
