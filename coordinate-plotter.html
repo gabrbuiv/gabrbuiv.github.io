@@ -400,7 +400,7 @@
         // Function to add coordinates to textarea
         function addCoordinateToInput(lat, lng) {
             const coordInput = document.getElementById('coordinateInput');
-            const coordText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            const coordText = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
             
             if (coordInput.value.trim()) {
                 coordInput.value += '\n' + coordText;
@@ -426,7 +426,7 @@
                     <div class="coords">Lat: ${lat.toFixed(6)}°</div>
                     <div class="coords">Lng: ${lng.toFixed(6)}°</div>
                     <div class="actions">
-                        <button class="btn-small btn-copy" onclick="copyToClipboard('${lat.toFixed(4)}, ${lng.toFixed(4)}').then(() => alert('📋 Coordinates copied to clipboard!'))">Copy</button>
+                        <button class="btn-small btn-copy" onclick="copyToClipboard('${lat.toFixed(5)}, ${lng.toFixed(5)}').then(() => alert('📋 Coordinates copied to clipboard!'))">Copy</button>
                         <button class="btn-small btn-add" onclick="addCoordinateToInput(${lat}, ${lng})">Add to Input</button>
                     </div>
                 </div>
